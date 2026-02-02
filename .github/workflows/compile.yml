@@ -1,4 +1,4 @@
-name: Arduino Build
+name: Build Firmware BIN
 on: [push]
 jobs:
   build:
@@ -6,14 +6,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v1
+
       - name: Install ESP8266 Core
         run: |
           arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
           arduino-cli core install esp8266:esp8266 --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
       - name: Install Libraries
         run: |
           arduino-cli lib install "ESP8266 and ESP32 OLED driver for SSD1306 displays"
-      - name: Compile
-        run: arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 GMpro1.ino
+
+      # BAGIAN KRUSIAL: Membuat folder build dan menyimpan file BIN
+      - name: Compile and Export BIN
+        run: |
+          mkdir build
+          arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 --output-dir ./build GMpro1.ino
+
+      # BAGIAN KRUSIAL: Mengirim file ke tab Artifacts agar bisa didownload
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Firmware-GMpro1-SIAP-PAKAI
+          path: ./build/*.bin
